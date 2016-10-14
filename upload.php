@@ -33,8 +33,10 @@ $submission_plugin = $assignment->get_submission_plugin_by_type('onlineaudio');
 
 $submission = $assignment->get_user_submission($USER->id, true);
 
-if($submission_plugin->add_recording($submission)) {
-    redirect($viewurl);
-} else {
-    redirect($viewurl, get_string('uploaderror', 'assignsubmission_onlineaudio'), 10);
-}
+print_r('lel');
+$submission_plugin->add_recording($submission);
+// if($submission_plugin->add_recording($submission)) {
+//     redirect($viewurl);
+// } else {
+//     redirect($viewurl, get_string('uploaderror', 'assignsubmission_onlineaudio'), 10);
+// }

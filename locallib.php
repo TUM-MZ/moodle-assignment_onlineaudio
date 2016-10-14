@@ -239,8 +239,16 @@ class assign_submission_onlineaudio extends assign_submission_plugin {
      * @return bool
      */
     public function get_form_elements($submission, MoodleQuickForm $mform, stdClass $data) {
-        global $CFG, $USER;
+        global $CFG, $USER, $PAGE;
         $submissionid = $submission ? $submission->id : 0;
+        $submissionurl = $CFG->wwwroot.'/mod/assign/submission/onlineaudio/upload.php';
+        $submissionurl .= '?return='.urlencode($CFG->wwwroot."/mod/assign/view.php?id={$this->assignment->get_course_module()->id}&action=editsubmission");
+        $submissionurl  .= "&filefield=assignment_file&id={$this->assignment->get_course_module()->id}&sid={$submissionid}";
+        $PAGE->requires->js_call_amd('assignsubmission_onlineaudio/recorder', 'init', array(
+            'url' => $submissionurl,
+            'id' => $this->assignment->get_course_module()->id,
+            'sid' => $submissionid));
+
         $maxfiles = $this->get_config('maxfilesubmissions');
         $defaultname = $this->get_config('defaultname');
         $allownameoverride = $this->get_config('nameoverride');
@@ -249,44 +257,21 @@ class assign_submission_onlineaudio extends assign_submission_plugin {
         }
         $count = $this->count_files($submissionid, ASSIGN_FILEAREA_SUBMISSION_ONLINEAUDIO);
         if($count < $maxfiles) {
-            $url='submission/onlineaudio/assets/recorder.swf?gateway='.urlencode($CFG->wwwroot.'/mod/assign/submission/onlineaudio/upload.php');
-            $flashvars = '&return='.urlencode($CFG->wwwroot."/mod/assign/view.php?id={$this->assignment->get_course_module()->id}&action=editsubmission");
-            $flashvars .= "&filefield=assignment_file&id={$this->assignment->get_course_module()->id}&sid={$submissionid}";
-
-            if($defaultname) {
-                $field=($allownameoverride)?'filename':'forcename';
-                $filename=($defaultname==2)?fullname($USER):$USER->username;
-                $filename=clean_filename($filename);
-                $assignname=clean_filename($this->assignment->get_instance()->name);
-                $coursename=clean_filename($this->assignment->get_course()->shortname);
-                $filename.='_-_'.substr($assignname,0,20).'_-_'.$coursename.'_-_'.date('Y-m-d');
-                $filename=str_replace(' ', '_', $filename);
-                $flashvars .= "&$field=$filename";
-            }
-
-            $html = '<script type="text/javascript" src="submission/onlineaudio/assets/swfobject.js"></script>
-                <script type="text/javascript">
-                swfobject.registerObject("onlineaudiorecorder", "10.1.0", "submission/onlineaudio/assets/expressInstall.swf");
-                </script>';
-
-            $html .= '<div id="onlineaudiorecordersection" style="float:left">
-                <object id="onlineaudiorecorder" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="215" height="138">
-                        <param name="movie" value="'.$url.$flashvars.'" />
-                        <!--[if !IE]>-->
-                        <object type="application/x-shockwave-flash" data="'.$url.$flashvars.'" width="215" height="138">
-                        <!--<![endif]-->
-                        <div>
-                                <p><a href="http://www.adobe.com/go/getflashplayer"><img src="//www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="Get Adobe Flash player" /></a></p>
-                        </div>
-                        <!--[if !IE]>-->
-                        </object>
-                        <!--<![endif]-->
-                </object></div>';
-            $mform->addElement('html', $html);
+            $html5 = '';
+            $html5 .= '<div class="html5_recorder">';
+            $html5 .= '<button type="button" id="state">Loading recorder...</button>';
+            $html5 .= '<div id="audiopreview">';
+            $html5 .= '<audio src="" controls="controls" id="audioplayer">Your browser does not support HTML5 audio</audio>';
+            $html5 .= '<a id="download" href="#">Download</a>';
+            $html5 .= '<button type="button" id="reset">Reset</button>';
+            $html5 .= '</div>';
+            $html5 .= '</div>';
+            $mform->addElement('html', $html5);
         } else {
             $mform->addElement('html', '<p>'.get_string('maxfilesreached', 'assignsubmission_onlineaudio').'</p>');
         }
         $mform->addElement('html', $this->print_user_files($submissionid));
+
 
         return true;
     }
@@ -322,28 +307,18 @@ class assign_submission_onlineaudio extends assign_submission_plugin {
         $filesubmission = $this->get_file_submission($submission->id);
 
         // Process uploaded file
-        if (!array_key_exists('assignment_file', $_FILES)) {
+        if (!array_key_exists('assignment_file', $_POST) ) {
             return false;
         }
-        $filedetails = $_FILES['assignment_file'];
+        $filename = $_POST['fname'];
+        $filedata = base64_decode(explode(',', $_POST['assignment_file'])[1]);
 
-        $filename = $filedetails['name'];
-        $filesrc = $filedetails['tmp_name'];
+        $temp_name=basename($filename); // We want to clean the file's base name only
 
-        if (!is_uploaded_file($filesrc)) {
-            return false;
-        }
-
-        $ext = substr(strrchr($filename, '.'), 1);
-        if (!preg_match('/^(mp3|wav|wma)$/i',$ext)) {
-            return false;
-        }
-
-        $temp_name=basename($filename,".$ext"); // We want to clean the file's base name only
         // Run param_clean here with PARAM_FILE so that we end up with a name that other parts of Moodle
         // (download script, deletion, etc) will handle properly.  Remove leading/trailing dots too.
         $temp_name=trim(clean_param($temp_name, PARAM_FILE),".");
-        $filename=$temp_name.".$ext";
+
         // check for filename already existing and add suffix #.
         $n=1;
         while($fs->file_exists($this->assignment->get_context()->id, 'assignsubmission_onlineaudio', ASSIGN_FILEAREA_SUBMISSION_ONLINEAUDIO, $submission->id, '/', $filename)) {
@@ -359,7 +334,7 @@ class assign_submission_onlineaudio extends assign_submission_plugin {
               'filepath' => '/',
               'filename' => $filename
               );
-        if ($newfile = $fs->create_file_from_pathname($fileinfo, $filesrc)) {
+        if ($newfile = $fs->create_file_from_string($fileinfo, $filedata)) {
             $files = $fs->get_area_files($this->assignment->get_context()->id, 'assignsubmission_onlineaudio', ASSIGN_FILEAREA_SUBMISSION_ONLINEAUDIO, $submission->id, "id", false);
             $count = $this->count_files($submission->id, ASSIGN_FILEAREA_SUBMISSION_ONLINEAUDIO);
             // send files to event system

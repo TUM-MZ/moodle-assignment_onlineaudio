@@ -1,0 +1,8 @@
+.editsubmissionform #audiopreview {
+    display: none;
+    align-items: center;
+}
+
+.editsubmissionform #audiopreview > * {
+    margin-right: 4px;
+}
