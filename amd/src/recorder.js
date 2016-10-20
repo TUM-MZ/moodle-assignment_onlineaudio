@@ -34,12 +34,23 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
               var $that = $(this);
               console.log('start recording');
               ev.preventDefault();
-              recorder.record();
+            recorder.record();
+            var secPassed = 0;
+            var updateText = function() {
+              var minutes = Math.floor(secPassed / 60);
+              var seconds = ('0' + secPassed % 60).slice(-2);
+              $that.text('Recording (' + minutes + ':' + seconds + ')...click to stop');
+            }
+            updateText();
+            var timer = setInterval(function() {
+              ++secPassed;
+              updateText();
+            }, 1000);
               $that
-                .text('Recording...click to stop.')
                 .off('click')
                 .on('click', function(ev) {
                   ev.preventDefault();
+                  clearInterval(timer);
                   console.log('stop recording');
                   $that.text('Coverting to mp3, please wait...');
                   $that.prop('disabled', true);
