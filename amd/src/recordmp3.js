@@ -2,7 +2,7 @@ define(['jquery'], function($) {
   "use strict";
   var module = {
     init: function(upload_url) {
-      var WORKER_PATH = './submission/onlineaudio/amd/src/worker-realtime.js';
+      var WORKER_PATH = './submission/onlineaudio/amd/src/workers/worker-realtime.js';
       var currCallback;
 
       var Recorder = function(stream, cfg) {
