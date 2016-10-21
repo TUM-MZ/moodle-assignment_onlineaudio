@@ -68,7 +68,6 @@ define(['jquery'], function($) {
 
         //Mp3 conversion
         worker.onmessage = function(e) {
-          console.log('got mp3 blob');
           var mp3Blob = new Blob(e.data.buf, {
             type: 'audio/mp3'
           });

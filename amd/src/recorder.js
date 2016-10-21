@@ -10,7 +10,6 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
   "use strict";
   var module = {
     init: function(upload_url, id, sid) {
-      var AudioContext, audio_context;
       recordmp3.init(upload_url);
       var Recorder = recordmp3.Recorder;
       $("#audiopreview").hide();
@@ -29,10 +28,8 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
         });
 
         function bindStateClick() {
-
           $('#state').on('click', function(ev) {
               var $that = $(this);
-              console.log('start recording');
               ev.preventDefault();
             recorder.record();
             var secPassed = 0;
@@ -51,7 +48,6 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
                 .on('click', function(ev) {
                   ev.preventDefault();
                   clearInterval(timer);
-                  console.log('stop recording');
                   $that.text('Coverting to mp3, please wait...');
                   $that.prop('disabled', true);
                   recorder.stop();
@@ -70,7 +66,6 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
                         reader.onload = function(event) {
                           var fd = new FormData();
                           var mp3Name = encodeURIComponent('audio_recording_' + new Date().getTime() + '.mp3');
-                          console.log("mp3name = " + mp3Name);
                           fd.append('fname', mp3Name);
                           fd.append('assignment_file', event.target.result);
                           $.ajax({
@@ -82,7 +77,6 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
                           }).done(function(data) {
                             $that.text('Uploaded');
                             location.reload();
-                            console.log('uploaded data, ' + data);
                           });
                         }
                         reader.readAsDataURL(mp3Data);
@@ -109,7 +103,7 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
       navigator.getUserMedia({
         audio: true
       }, startUserMedia, function(err) {
-        console.log('No live audio present: ' + err);
+        console.error('No live audio present: ' + err);
       });
     },
   };

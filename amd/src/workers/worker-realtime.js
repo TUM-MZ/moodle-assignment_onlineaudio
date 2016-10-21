@@ -1,24 +1,26 @@
 /**
  * Created by intelWorx on 27/10/2015.
  */
-(function () {
+(function() {
   'use strict';
 
-  console.log('MP3 conversion worker started.');
   importScripts('../vendor/lame.min.js');
 
-  var mp3Encoder, maxSamples = 1152, samplesLeft, samplesRight, config, dataBuffer;
-  var clearBuffer = function () {
+  var mp3Encoder, maxSamples = 1152,
+    samplesLeft, samplesRight, config, dataBuffer;
+  var clearBuffer = function() {
     dataBuffer = [];
   };
 
-  var appendToBuffer = function (mp3Buf) {
+  var appendToBuffer = function(mp3Buf) {
     dataBuffer.push(new Int8Array(mp3Buf));
   };
 
 
-  var init = function (prefConfig) {
-    config = prefConfig || {debug: true};
+  var init = function(prefConfig) {
+    config = prefConfig || {
+      debug: true
+    };
     mp3Encoder = new lamejs.Mp3Encoder(1, config.sampleRate || 44100, config.bitRate || 123);
     clearBuffer();
   };
@@ -31,14 +33,14 @@
     }
   };
 
-  var convertBuffer = function(arrayBuffer){
+  var convertBuffer = function(arrayBuffer) {
     var data = new Float32Array(arrayBuffer);
     var out = new Int16Array(arrayBuffer.length);
     floatTo16BitPCM(data, out)
     return out;
   };
 
-  var encode = function (arrayBufferLeft, arrayBufferRight) {
+  var encode = function(arrayBufferLeft, arrayBufferRight) {
     samplesLeft = convertBuffer(arrayBufferLeft);
     samplesRight = convertBuffer(arrayBufferRight);
     var remaining = samplesLeft.length;
@@ -51,7 +53,7 @@
     }
   };
 
-  var finish = function () {
+  var finish = function() {
     appendToBuffer(mp3Encoder.flush());
     self.postMessage({
       cmd: 'end',
@@ -63,7 +65,7 @@
     clearBuffer(); //free up memory
   };
 
-  self.onmessage = function (e) {
+  self.onmessage = function(e) {
     switch (e.data.cmd) {
       case 'init':
         init(e.data.config);
@@ -73,8 +75,7 @@
         encode(e.data.bufferLeft, e.data.bufferRight);
         break;
 
-    case 'finish':
-      console.log('Worker finishing');
+      case 'finish':
         finish();
         break;
     }
