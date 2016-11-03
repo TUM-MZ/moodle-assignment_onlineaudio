@@ -6,3 +6,49 @@
 .editsubmissionform #audiopreview > * {
     margin-right: 4px;
 }
+
+.editsubmissionform #state.start::before {
+    background-image: url([[pix:assignsubmission_onlineaudio|record]]);
+    background-size: 20px 20px;
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: 5px;
+}
+
+.editsubmissionform #state.recording::before {
+    background-image: url([[pix:assignsubmission_onlineaudio|record]]);
+    background-size: 20px 20px;
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: 5px;
+    animation: pulsate 1.5s infinite;
+}
+
+.editsubmissionform #state.submit::before {
+    background-image: url([[pix:assignsubmission_onlineaudio|submit]]);
+    background-size: 20px 20px;
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    top: 5px;
+}
+
+@keyframes pulsate {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

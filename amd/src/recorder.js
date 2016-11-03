@@ -8,6 +8,7 @@
  */
 define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordmp3) {
   "use strict";
+  var timer;
   var module = {
     init: function(upload_url, id, sid) {
       recordmp3.init(upload_url);
@@ -31,28 +32,19 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
           $('#state').on('click', function(ev) {
               var $that = $(this);
               ev.preventDefault();
-            recorder.record();
-            var secPassed = 0;
-            var updateText = function() {
-              var minutes = Math.floor(secPassed / 60);
-              var seconds = ('0' + secPassed % 60).slice(-2);
-              $that.text('Recording (' + minutes + ':' + seconds + ')...click to stop');
-            }
-            updateText();
-            var timer = setInterval(function() {
-              ++secPassed;
-              updateText();
-            }, 1000);
+              recorder.record();
+              module.setState('recording');
               $that
                 .off('click')
                 .on('click', function(ev) {
                   ev.preventDefault();
-                  clearInterval(timer);
+                  module.setState('converting');
                   $that.text('Coverting to mp3, please wait...');
                   $that.prop('disabled', true);
                   recorder.stop();
                   recorder.getMP3Blob(function(mp3Data) {
                     var url = URL.createObjectURL(mp3Data);
+                    module.setState('submit');
                     $that
                       .off('click')
                       .text('Submit')
@@ -90,8 +82,8 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
                     $("#audiopreview").css('display', 'flex');
                   });
                 })
-            })
-            .text('Start recording');
+          });
+          module.setState('start');
         }
         bindStateClick();
       }
@@ -106,6 +98,42 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
         console.error('No live audio present: ' + err);
       });
     },
+    setState(state) {
+      var $that = $('#state');
+      var states = {
+        start: function() {
+          $that.text('Start recording').removeClass().addClass('start');
+        },
+        recording: function() {
+          var secPassed = 0;
+          $that.removeClass().addClass('recording');
+          var updateText = function() {
+            var minutes = Math.floor(secPassed / 60);
+            var seconds = ('0' + secPassed % 60).slice(-2);
+            $that.text('Recording (' + minutes + ':' + seconds + ')...click to stop');
+          }
+          updateText();
+          timer = setInterval(function() {
+            ++secPassed;
+            updateText();
+          }, 1000);
+        },
+        converting: function() {
+          clearInterval(timer);
+          $that
+            .removeClass().addClass('converting')
+            .text('Coverting to mp3...please wait')
+            .prop('disabled', true);
+        },
+        submit: function() {
+          $that
+            .removeClass().addClass('submit')
+            .text('Submit')
+            .prop('disabled', false);
+        }
+      };
+      states[state]();
+    }
   };
   return module;
 });
