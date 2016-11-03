@@ -98,7 +98,7 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
         console.error('No live audio present: ' + err);
       });
     },
-    setState(state) {
+    setState: function(state) {
       var $that = $('#state');
       var states = {
         start: function() {
