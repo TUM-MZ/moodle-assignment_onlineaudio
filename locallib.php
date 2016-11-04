@@ -261,6 +261,7 @@ class assign_submission_onlineaudio extends assign_submission_plugin {
             $html5 .= '<div class="html5_recorder">';
             $html5 .= '<button type="button" id="state">Loading recorder...</button>';
             $html5 .= '<div id="audiopreview">';
+            $html5 .= '<label for="audioplayer">Preview:</label>';
             $html5 .= '<audio src="" controls="controls" id="audioplayer">Your browser does not support HTML5 audio</audio>';
             $html5 .= '<a id="download" href="#">Download</a>';
             $html5 .= '<button type="button" id="reset">Reset</button>';

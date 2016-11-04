@@ -77,7 +77,7 @@ define(['jquery', 'assignsubmission_onlineaudio/recordmp3'], function($, recordm
                     $('#download')
                       .attr('href', url)
                       .attr('download', "recorded.mp3")
-                      .html('Download Ready');
+                      .html('Download');
                     $('#audioplayer').attr('src', url);
                     $("#audiopreview").css('display', 'flex');
                   });
