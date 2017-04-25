@@ -70,23 +70,5 @@ function assignsubmission_onlineaudio_pluginfile($course, $cm, context $context,
         return false;
     }
 
-    if (!isset($_SERVER['HTTP_RANGE'])) {
-        // Chrome (and others?) re-issues the request with Range headers to get it in chunks.
-        // We only want to log the initial request, not each chunk.
-        $event = \mod_assign\event\file_downloaded::create(array(
-            'objectid' => $cm->id,
-            'context' => $context,
-            'relateduserid' => $userid,
-            'other' => array(
-                'component' => 'assignsubmission_onlineaudio',
-                'filearea' => $file->get_filearea(),
-                'itemid' => $file->get_itemid(),
-                'filepath' => $file->get_filepath(),
-                'filename' => $file->get_filename()
-            )
-        ));
-        $event->trigger();
-    }
-
     send_stored_file($file, 0, 0, true); // download MUST be forced - security!
 }
